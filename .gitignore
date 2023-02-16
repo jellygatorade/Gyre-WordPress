@@ -1,0 +1,25 @@
+# Set up .gitignore as a whitelist
+*
+!*/
+
+# track this file
+!/.gitignore
+
+# whitelist these patterns
+!/wp-content/themes/index.php
+!/wp-content/themes/Advanced*/*
+!/wp-content/themes/Advanced*/*/*
+!/wp-content/themes/Digital*/*
+!/wp-content/themes/Digital*/*/*
+
+!/wp-content/plugins/index.php
+!/wp-content/plugins/kkane-*/*
+!/wp-content/plugins/ncma-*/*
+
+!/wp-content/index.php
+
+!wp-config.php
+
+# blacklist these filetypes
+*.otf
+*.png

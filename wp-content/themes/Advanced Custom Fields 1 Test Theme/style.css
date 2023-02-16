@@ -1,0 +1,46 @@
+/*
+Theme Name: Advanced Custom Fields 1 Test Theme
+Author: Kevin Kane
+Description: First custom theme to try out Advanced Custom Fields
+Version: 1.0
+*/
+
+body {
+  background-color: #ffffff;
+}
+
+header {
+  background: #ffffff;
+  width: 100%;
+  height: 100px;
+}
+
+.navigation {
+  /* does styling the menu work?? */
+  color: red;
+}
+
+@font-face {
+  font-family: "Verlag-BlackItalic";
+  src: url("./font/Verlag-BlackItalic.otf");
+}
+
+@font-face {
+  font-family: "Verlag-Bold";
+  src: url("./font/Verlag-Bold.otf");
+}
+
+@font-face {
+  font-family: "Verlag-Book";
+  src: url("./font/Verlag-Book.otf");
+}
+
+@font-face {
+  font-family: "Verlag-Light";
+  src: url("./font/Verlag-Light.otf");
+}
+
+@font-face {
+  font-family: "Verlag-XLight";
+  src: url("./font/Verlag-XLight.otf");
+}
