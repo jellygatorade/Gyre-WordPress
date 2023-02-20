@@ -293,6 +293,39 @@ class THE_TESTING_TABLE extends WP_List_Table
     }
 }
 
+/*
+
+*/
+function ncma_digital_labels_wp_query() {
+    $WP_Query_data = array();
+
+    $args = array(
+        'numberposts' => -1, //all
+        'orderby' => 'title',
+        'order' => 'ASC',
+        'post_type' => 'ncma-digital-label',
+    );
+
+    $posts = get_posts($args);
+
+    $the_query = new WP_Query($args);
+
+    if ($the_query->have_posts()) {
+
+        while ($the_query->have_posts()) {
+            $the_query->the_post();
+
+            $title = get_the_title();
+
+            $WP_Query_data[] = array(
+                'title' => $title,
+            );
+        }
+    }
+
+    return $WP_Query_data;
+}
+
 /**************************************************************************************************
 * Create the page that displays our table
 **************************************************************************************************/
@@ -318,32 +351,65 @@ function kkane_list_page_admin_menu() {
         // echo '<div class="wrap">';
         // echo $wp_list_table->display(); // this is the syntax to call method on the class instance in php
         // echo '</div>';
-        
+
         // Use php to insert page title here (abstract add_menu_page args out to array)
+        // console.log(`${WPURLS.siteurl}/wp-admin/admin.php?page=list-table&filter_action=${this.value}`)
         ?>
+          <style>
+            .dropdown {
+                margin: 6px 0px 0px 0px;
+            }
+          </style>
+
+          <script>
+            // WPURLS.siteurl is defined for JavaScript use in functions.php (admin_enqueue_scripts)
+            function navigate(string) {
+                window.location.assign(`${WPURLS.siteurl}/wp-admin/admin.php?page=list-table&filter_action=${string}`)
+            }
+          </script>
+
           <div class="wrap">
             <h2>User Analytics</h2>
+            <div class="dropdown">
+            <select onchange="navigate(this.value)">
+                <option value="">Show all</option>
+                <?php
+                    $digital_label_posts = ncma_digital_labels_wp_query();
+                    //write_log($_GET['filter_action']);
+
+                    foreach( $digital_label_posts as $post ): ?>
+                        <option 
+                            value="<?php echo $post['title']; ?>" 
+                            <?php if ($_GET['filter_action'] == $post['title']) { echo 'selected'; }?>
+                        ><?php echo $post['title']; ?></option>
+                    <?php endforeach; 
+                ?>
+            </select>
+            <input class="button" type="submit" name="filter_action" value="Filter">
+            </div>
             <?php $wp_list_table->display(); ?>
           </div>
         <?php
     }
-
-    // Add screen options
-    add_action( "load-$hook", 'add_options' );
 
     function add_options() {
         global $wp_list_table;
 
         $option = 'per_page';
         $args = array(
-                'label' => 'Rows',
-                'default' => 10,
-                'option' => 'rows_per_page'
-                );
+            'label' => 'Rows',
+            'default' => 10,
+            'option' => 'rows_per_page'
+        );
         add_screen_option( $option, $args );
 
         $wp_list_table = new THE_TESTING_TABLE();
+
+        //write_log($wp_list_table->get_primary_column());
     }
+
+    // Add screen options
+    add_action( "load-$hook", 'add_options' );
 }
 
 // When WP runs the 'admin_menu' action, run our function
