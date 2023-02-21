@@ -40,4 +40,3 @@ add_action('admin_enqueue_scripts', 'ncma_load_siteurl_script');
 //     wp_enqueue_script('customjs');
 // }
 // add_action('wp_enqueue_scripts', 'ncma_loadjs');
-

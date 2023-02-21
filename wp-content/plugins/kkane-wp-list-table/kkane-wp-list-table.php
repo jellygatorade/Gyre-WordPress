@@ -61,6 +61,8 @@ class THE_TESTING_TABLE extends WP_List_Table
         $data = $this->table_data();
         usort($data, array($this, 'sort_data')); // usort() - https://www.php.net/manual/en/function.usort.php
 
+        $this->process_bulk_action();
+
         //$perPage = 5;
         $perPage = $this->get_items_per_page('rows_per_page', 5);
         $currentPage = $this->get_pagenum();
@@ -140,6 +142,14 @@ class THE_TESTING_TABLE extends WP_List_Table
         $dummy_array_films = require_once(ABSPATH . 'wp-content/plugins/kkane-wp-list-table/kkane-dummy-data-films.php');
 
         foreach($dummy_array_films as $index=>$film) { // This is how to access the $index int within php foreach loop, $result holds current item
+            
+            // Testing using query string to filter table rows
+            // if (isset($_GET['filter_action']) && $film['id'] > 4) {
+            //     if ($_GET['filter_action'] == "Kunstkamer 348") {
+            //         break;
+            //     }
+            // }
+            
             $id = $film['id'];
             $artist_1_name = $film['director'];
   
@@ -291,6 +301,165 @@ class THE_TESTING_TABLE extends WP_List_Table
         // descending
         return -$result;
     }
+
+    function extra_tablenav($which) {
+        switch ( $which )
+        {
+            case 'top':
+                ?>  
+                    <style>
+                        .custom-select {
+                            margin-bottom: 4px;
+                        }
+                    </style>
+
+                    <script>
+                        // WPURLS.siteurl is defined for JavaScript use in functions.php (admin_enqueue_scripts)
+                        function navigateFilter(event) {
+                            event.preventDefault();
+                            const select = document.getElementById("filter-select");
+
+                            switch (select.value) {
+                                case 'show-all':
+                                    window.location.assign(`${WPURLS.siteurl}/wp-admin/admin.php?page=list-table`);
+                                    break;
+                                default:
+                                    window.location.assign(`${WPURLS.siteurl}/wp-admin/admin.php?page=list-table&filter_action=${select.value}`);
+                            }
+                        }
+                    </script>
+
+                    <!-- onchange="navigateFilter(event, this.value)" -->
+                    <select class="custom-select" id="filter-select">
+                        <option value="show-all">Show all</option>
+                        <?php
+                            $digital_label_posts = ncma_digital_labels_wp_query();
+
+                            // Create a dropdown option fro each digital label post
+                            foreach( $digital_label_posts as $post ): ?>
+                                <option 
+                                    value="<?php echo $post['title']; ?>" 
+                                    <?php 
+                                        // Set selected dropdown per url querystring
+                                        if (isset($_GET['filter_action'])) {
+                                            if ($_GET['filter_action'] == $post['title']) { echo 'selected'; }
+                                        }
+                                    ?>
+                                ><?php echo $post['title']; ?></option>
+                            <?php endforeach; 
+                        ?>
+                    </select>
+                    <input class="button" type="submit" name="filter_action" value="Filter" onclick="navigateFilter(event)">
+                    <input class="button" type="submit" name="export_to_csv" value="Export to CSV" onclick="console.log(`export`)">
+                <?php
+
+                break;
+
+            case 'bottom':
+                // Your html code to output to tablenav bottom footer
+                break;
+        }
+    }
+
+    function get_bulk_actions() {
+        $actions = array(
+          "export-all" => 'Export to CSV',
+          //'export-selected' => 'Export Selected'
+        );
+        return $actions;
+    }
+
+    function process_bulk_action(){
+        echo "<script>console.log('Testing bulk actions');</script>";
+        // if ( "-1" == $this->current_action() ){
+        //     return;
+        // }
+        if ( "export-all" == $this->current_action() ){
+            global $wpdb;
+            
+            //header('Content-Description: File Transfer');
+            //header("Content-Transfer-Encoding: binary");
+            //header("Content-Type: application/octet-stream");
+            header('Content-Type: text/csv');
+            header('Content-Disposition: attachment; filename="export.csv";');
+
+            // clean out other output buffers
+            ob_end_clean();
+
+            // header('Content-Type: text/csv');
+            // header('Content-Disposition: attachment; filename="export.csv";');
+
+            $fp = fopen('php://output', 'w');
+
+            // CSV/Excel header label
+            $header_row = array(
+                0 => 'id',
+                1 => 'created',
+                2 => 'name',
+                3 => 'request_headers',
+                4 => 'response_headers',
+                5 => 'request',
+                6 => 'response',
+                7 => 'request_time',
+                8 => 'status_message',
+                9 => 'status_code',
+            );
+
+            //write the header
+            fputcsv($fp, $header_row);
+
+            // // retrieve any table data desired. Members is an example 
+            // $Table_Name   = 'bpj5s_external_api_request_log'; 
+            // $sql_query    = $wpdb->prepare("SELECT * FROM $Table_Name", 1) ;
+            // // $sql_query    = $wpdb->prepare("SELECT * FROM $Table_Name WHERE id IN($ids)", 1) ;
+            // $rows         = $wpdb->get_results($sql_query, ARRAY_A);
+            // if(!empty($rows)) 
+            // {
+            //     foreach($rows as $Record)
+            //     {  
+            //     $OutputRecord = array($Record['id'],
+            //                     $Record['created'],
+            //                     $Record['name'],
+            //                     $Record['request_headers'],
+            //                     $Record['response_headers'],
+            //                     $Record['request'],
+            //                     $Record['response'],
+            //                     $Record['request_time'],
+            //                     $Record['status_message'],  
+            //                     $Record['status_code']);
+            //     fputcsv($fp, $OutputRecord);       
+            //     }
+            // }
+
+            // Handle wpdb queries if using wp multisite
+            // get_current_blog_id() returns just the int (7)
+            // $wpdb->get_blog_prefix() returns complete prefix (wp_7_)
+            $blog_prefix = $wpdb->get_blog_prefix();
+            $posts_table = $blog_prefix . 'posts';
+
+            $query = "SELECT * FROM `$posts_table` WHERE `post_type`='ncma-artwork'";
+            $db_results = $wpdb->get_results( $query, OBJECT );
+
+            if(!empty($db_results)) {
+                foreach($db_results as $index=>$result) { // This is how to access the $index int within php foreach loop, $result holds current item
+                    $id = $result->ID;
+                    $artist_1_name = get_field('en_artist_1', $id);
+      
+                    $OutputRecord = array(
+                        'id' => $id,
+                        'artist_1_name' => $artist_1_name
+                    );
+
+                    fputcsv($fp, $OutputRecord);
+                }
+            }
+
+            //fclose( $fp );
+            fpassthru( $fp );
+            exit;  
+            // Stop any more exporting to the file
+        }
+    }
 }
 
 /*
@@ -353,41 +522,12 @@ function kkane_list_page_admin_menu() {
         // echo '</div>';
 
         // Use php to insert page title here (abstract add_menu_page args out to array)
-        // console.log(`${WPURLS.siteurl}/wp-admin/admin.php?page=list-table&filter_action=${this.value}`)
         ?>
-          <style>
-            .dropdown {
-                margin: 6px 0px 0px 0px;
-            }
-          </style>
-
-          <script>
-            // WPURLS.siteurl is defined for JavaScript use in functions.php (admin_enqueue_scripts)
-            function navigate(string) {
-                window.location.assign(`${WPURLS.siteurl}/wp-admin/admin.php?page=list-table&filter_action=${string}`)
-            }
-          </script>
-
           <div class="wrap">
             <h2>User Analytics</h2>
-            <div class="dropdown">
-            <select onchange="navigate(this.value)">
-                <option value="">Show all</option>
-                <?php
-                    $digital_label_posts = ncma_digital_labels_wp_query();
-                    //write_log($_GET['filter_action']);
-
-                    foreach( $digital_label_posts as $post ): ?>
-                        <option 
-                            value="<?php echo $post['title']; ?>" 
-                            <?php if ($_GET['filter_action'] == $post['title']) { echo 'selected'; }?>
-                        ><?php echo $post['title']; ?></option>
-                    <?php endforeach; 
-                ?>
-            </select>
-            <input class="button" type="submit" name="filter_action" value="Filter">
-            </div>
-            <?php $wp_list_table->display(); ?>
+            <form method="post">
+                <?php $wp_list_table->display(); ?>
+            </form>
           </div>
         <?php
     }
