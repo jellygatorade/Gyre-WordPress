@@ -1,51 +1,9 @@
 <?php
-/*
-Plugin Name: TESTING - New Page with WP_List_Table
-Description: Creates a new page in wp-admin to display a WP_List_Table. Examples for querying data for the table are provided in this php script.
-Version: 1.0
-Author: Kevin Kane
-*/
-
-// To-do 2/17
-// Compare code to this example below, and clean it up
-// Last I did was add screen options stuff, which complicated the way the table gets added
-// defined global variable within "add_options"
-// 
-// https://gist.github.com/Latz/7f923479a4ed135e35b2 - Sample plugin for usage of WP_List_Table class (complete version) 
-//
-// Figure out what is going on with losing the table data small widths with the permuatations of screen options
-
-// Following
-
-// How To Create Native Admin Tables In WordPress The Right Way
-// https://www.smashingmagazine.com/2011/11/native-admin-tables-wordpress/
-
-// An example code of using the WP_List_Table class. With Pagination. 
-// https://gist.github.com/paulund/7659452
-
-// Adding "export csv" option to wp list table bulk actions
-// https://stackoverflow.com/questions/70708264/adding-export-csv-option-to-wp-list-table-bulk-actions
-
-// Width of columns can be controlled by adding CSS to column classes
-// https://stackoverflow.com/questions/41933545/can-we-resize-wp-list-table-column-size
-/*
-echo '<style type="text/css">';
-echo '.wp-list-table .column-id { width: 5%; }';
-echo '.wp-list-table .column-booktitle { width: 40%; }';
-echo '.wp-list-table .column-author { width: 35%; }';
-echo '.wp-list-table .column-isbn { width: 20%; }';
-echo '</style>';
-*/
-
-// add_screen_option() may also be used to configure "admin screen options"
-// https://www.wpbeginner.com/glossary/screen-options/
-// https://developer.wordpress.org/reference/classes/wp_screen/
-// https://developer.wordpress.org/reference/functions/add_screen_option/
-// https://wpengineer.com/2426/wp_list_table-a-step-by-step-guide/#screen-options
+/*****************************************************************************************
+ * See kkane-wp-list-table.php for notes on original code references
+ *****************************************************************************************/
 
 
-// Excecute an another script in the same directory
-//require_once(dirname(__FILE__) . '/test-include.php');
 
 /*****************************************************************************************
  * Config defined as php constant - https://www.php.net/manual/en/language.constants.php
@@ -59,13 +17,15 @@ const NCMA_ANALYTICS_TABLE_CONFIG = array(
     ),
     'wp_list_table' => array(
         'columns' => array(
-            'id' => 'Post ID',
-            'artist_1_name' => 'Artist 1 Name',
+            'title' => 'Title',
+            //'id' => 'Post ID',
+            //'artist_1_name' => 'Artist 1 Name',
         ),
         'hidden_columns' => array(),
         'sortable_columns' => array(
-            'id' => array('id', 'desc'),
-            'artist_1_name' => array('artist_1_name', 'desc')
+            'title' => array('title', 'desc'),
+            //'id' => array('id', 'desc'),
+            //'artist_1_name' => array('artist_1_name', 'desc')
         ),
         'user-defaults' => array(
             'rows' => 10,
@@ -89,7 +49,31 @@ add_action('admin_enqueue_scripts', 'ncma_load_analytics_slug_script');
  * WP query to be used for selecting the table data
  ************************************************************/
 function ncma_analytics_table_wp_query() {
-    return;
+    $args = array(
+        'numberposts' => -1, // all
+        'orderby' => 'title',
+        'order' => 'ASC',
+        'post_type' => 'ncma-analytics',
+    );
+
+    $WP_Query_data = array();
+
+    $the_query = new WP_Query($args);
+
+    if ($the_query->have_posts()) {
+
+        while ($the_query->have_posts()) {
+            $the_query->the_post();
+            $title = get_the_title();
+            // Get post meta here
+            $WP_Query_data[] = array(
+                'title' => $title,
+                // Add post meta here
+            );
+        }
+    }
+
+    return $WP_Query_data;
 }
 
 
@@ -98,8 +82,6 @@ function ncma_analytics_table_wp_query() {
  * One option for each 'ncma-digital-label' post title
  ************************************************************/
 function ncma_digital_labels_titles_wp_query() {
-    $WP_Query_data = array();
-
     $args = array(
         'numberposts' => -1, // all
         'orderby' => 'title',
@@ -107,7 +89,9 @@ function ncma_digital_labels_titles_wp_query() {
         'post_type' => 'ncma-digital-label',
     );
 
-    $posts = get_posts($args);
+    //$posts = get_posts($args);
+
+    $WP_Query_data = array();
 
     $the_query = new WP_Query($args);
 
@@ -204,30 +188,30 @@ class NCMA_Analytics_Table extends WP_List_Table
         /**************************************************
          * Using dummy data (imported)
          **************************************************/
-        $dummy_data = array();
+        // $dummy_data = array();
 
-        // Import dummy data
-        $dummy_array_films = require_once(ABSPATH . 'wp-content/plugins/kkane-wp-list-table/kkane-dummy-data-films.php');
+        // // Import dummy data
+        // $dummy_array_films = require_once(ABSPATH . 'wp-content/plugins/kkane-wp-list-table/kkane-dummy-data-films.php');
 
-        foreach($dummy_array_films as $index=>$film) { // This is how to access the $index int within php foreach loop, $result holds current item
+        // foreach($dummy_array_films as $index=>$film) { // This is how to access the $index int within php foreach loop, $result holds current item
             
-            // Testing using query string to filter table rows
-            // if (isset($_GET['filter_action']) && $film['id'] > 4) {
-            //     if ($_GET['filter_action'] == "Kunstkamer 348") {
-            //         break;
-            //     }
-            // }
+        //     // Testing using query string to filter table rows
+        //     // if (isset($_GET['filter_action']) && $film['id'] > 4) {
+        //     //     if ($_GET['filter_action'] == "Kunstkamer 348") {
+        //     //         break;
+        //     //     }
+        //     // }
             
-            $id = $film['id'];
-            $artist_1_name = $film['director'];
+        //     $id = $film['id'];
+        //     $artist_1_name = $film['director'];
   
-            $dummy_data[] = array(
-                'id' => $id,
-                'artist_1_name' => $artist_1_name
-            );
-        }
+        //     $dummy_data[] = array(
+        //         'id' => $id,
+        //         'artist_1_name' => $artist_1_name
+        //     );
+        // }
 
-        return $dummy_data;
+        // return $dummy_data;
 
         /**************************************************
          * Using WP_Query
@@ -261,7 +245,8 @@ class NCMA_Analytics_Table extends WP_List_Table
         //     }
         // }
 
-        // return $WP_Query_data;
+        //return $WP_Query_data;
+        return ncma_analytics_table_wp_query();
 
         /**************************************************
          * Using direct WordPress database query
@@ -317,7 +302,7 @@ class NCMA_Analytics_Table extends WP_List_Table
     private function sort_data($a, $b)
     {
         // Set defaults
-        $orderby = 'id'; // this is the property we will sort by default
+        $orderby = array_key_first(NCMA_ANALYTICS_TABLE_CONFIG['wp_list_table']['columns']); // this is the property we will sort by default
         $order = 'asc';
 
         // If orderby is set, use this as the sort column
