@@ -18,12 +18,14 @@ const NCMA_ANALYTICS_TABLE_CONFIG = array(
     'wp_list_table' => array(
         'columns' => array(
             'title' => 'Title',
+            'count' => 'Engagements',
             //'id' => 'Post ID',
             //'artist_1_name' => 'Artist 1 Name',
         ),
         'hidden_columns' => array(),
         'sortable_columns' => array(
             'title' => array('title', 'desc'),
+            'count' => array('count', 'desc'),
             //'id' => array('id', 'desc'),
             //'artist_1_name' => array('artist_1_name', 'desc')
         ),
@@ -65,11 +67,35 @@ function ncma_analytics_table_wp_query() {
         while ($the_query->have_posts()) {
             $the_query->the_post();
             $title = get_the_title();
+            $id = get_the_ID();
+
+            if (isset($_GET['filter_action']) && $_GET['filter_action'] !== $title) {
+                // Continue to next iteration if current post title does not match filter_action query var
+                continue;
+            }
+
             // Get post meta here
-            $WP_Query_data[] = array(
-                'title' => $title,
-                // Add post meta here
-            );
+            $attract_count = get_post_meta($id, 'attract', true);
+            $artwork_count = get_post_meta($id, 'artwork', true);
+
+            // $WP_Query_data[] = array(
+            //     'title' => $title,
+            //     'count' => null,
+            // );
+
+            if ($attract_count) {
+                $WP_Query_data[] = array(
+                    'title' => "{$title} - Attract",
+                    'count' => $attract_count
+                );
+            }
+
+            if ($artwork_count) {
+                $WP_Query_data[] = array(
+                    'title' => "{$title} - Artwork",
+                    'count' => $artwork_count
+                );
+            }
         }
     }
 
@@ -445,6 +471,17 @@ function kkane_list_page_admin_menu() {
 
         // Use php to insert page title here (abstract add_menu_page args out to array)
         ?>
+          <style type="text/css">
+            .wp-list-table .column-title { 
+                /* width: 85%; */
+            }
+
+            .wp-list-table .column-count { 
+                /* text-align: right; */
+                width: 50%; 
+            }
+          </style>
+
           <div class="wrap">
             <h1><?php echo NCMA_ANALYTICS_TABLE_CONFIG['menu_page']['title'] ?></h1>
             <?php $ncma_analytics_wp_list_table->display(); ?>

@@ -8,5 +8,5 @@ Author: Kevin Kane
 
 // Require the scripts to execute them
 // dirname(__FILE__) represents the current directory
-require_once(dirname(__FILE__) . '/ncma-analytics-page.php');
+require_once(dirname(__FILE__) . '/ncma-analytics-admin-page.php');
 require_once(dirname(__FILE__) . '/ncma-analytics-register-posttype.php');
