@@ -1,8 +1,8 @@
 <?php
 /*
-Plugin Name: TESTING - NCMA Analytics Post Type - 1
-Description: Plugin to register the ncma-analytics post type. Creates ncma-analytics post for each digital label, does not store timestamp information for ncma-analytics posts.
-Version: 1.0
+Plugin Name: TESTING - NCMA Analytics Post Type - 2
+Description: Plugin to register the ncma-analytics post type. New format for ncma-analytics posttype, store timestamp for each ncma-analytics post and use ACF field types.
+Version: 2.0
 Author: Kevin Kane
 */
 

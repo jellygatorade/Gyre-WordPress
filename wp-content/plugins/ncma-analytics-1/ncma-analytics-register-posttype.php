@@ -153,8 +153,7 @@ function ncma_analytics_create_posts() {
         }
     }
 }
-
-add_action( 'init', 'ncma_analytics_create_posts' );
+//add_action( 'init', 'ncma_analytics_create_posts' );
 
 /*******************************
  * REST API GET Endpoint
