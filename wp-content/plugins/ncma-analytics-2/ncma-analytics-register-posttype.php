@@ -63,7 +63,7 @@ All 'key' values must be globally unique!
 */
 if( function_exists('acf_add_local_field_group') ):
 
-    /* Used to apply field groups below to the ncma-digital-label post type */
+    /* Used to apply field groups below to the ncma-analytics post type */
     $location = array (
         array (
             array (
@@ -82,7 +82,7 @@ if( function_exists('acf_add_local_field_group') ):
             array (
                 'key' => 'field_ncma_analytics_ncma_digital_label_relationship',
                 'label' => 'Relation to digital label',
-                'name' => 'relation_to_digital_label',
+                'name' => 'ncma_analytics_ncma_digital_label_relationship',
                 'type' => 'relationship',
                 'instructions' => '',
                 'required' => 1,
@@ -96,7 +96,7 @@ if( function_exists('acf_add_local_field_group') ):
             array (
                 'key' => 'field_ncma_analytics_ncma_artwork_relationship',
                 'label' => 'Relation to artwork',
-                'name' => 'relation_to_artwork',
+                'name' => 'ncma_analytics_ncma_artwork_relationship',
                 'type' => 'relationship',
                 'instructions' => '',
                 'required' => 0,
@@ -108,12 +108,21 @@ if( function_exists('acf_add_local_field_group') ):
                 'conditional_logic' => 0,
             ),
             array (
-                'key' => 'field_ncma_analytics_data',
-                'label' => 'Data (engagements or duration)',
-                'name' => 'ncma_analytics_data',
+                'key' => 'field_ncma_analytics_clicks',
+                'label' => 'Engagements (clicks)',
+                'name' => 'ncma_analytics_clicks',
                 'type' => 'text',
                 'instructions' => '',
-                'required' => 1,
+                'required' => 0,
+                'conditional_logic' => 0,
+            ),
+            array (
+                'key' => 'field_ncma_analytics_average_duration',
+                'label' => 'Average duration (seconds)',
+                'name' => 'ncma_analytics_average_duration',
+                'type' => 'text',
+                'instructions' => '',
+                'required' => 0,
                 'conditional_logic' => 0,
             ),
         ),
@@ -195,22 +204,33 @@ function kkane_ncma_analytics_post_data($request) {
         );
         $post_id = wp_insert_post( $post_data );
 
-        // update relationship field
-        $field_key = "field_ncma_analytics_ncma_digital_label_relationship";
-        $value = $request_body['ncma_digital_label_post_id'];
-        update_field( $field_key, $value, $post_id );
+        // update digital label relationship field
+        if ($request_body['ncma_digital_label_post_id']) {
+            $field_key = "field_ncma_analytics_ncma_digital_label_relationship";
+            $value = $request_body['ncma_digital_label_post_id'];
+            update_field( $field_key, $value, $post_id );
+        }
 
-        // update relationship field
+        // update artwork relationship field
         if ($request_body['ncma_artwork_post_id']) {
             $field_key = "field_ncma_analytics_ncma_artwork_relationship";
             $value = $request_body['ncma_artwork_post_id'];
             update_field( $field_key, $value, $post_id );
         }
 
-        // update data field
-        $field_key = "field_ncma_analytics_data";
-        $value = $request_body['data'];
-        update_field( $field_key, $value, $post_id );
+        // update clicks field
+        if ($request_body['clicks']) {
+            $field_key = "field_ncma_analytics_clicks";
+            $value = $request_body['clicks'];
+            update_field( $field_key, $value, $post_id );
+        }
+
+        // update average duration field
+        if ($request_body['average_duration']) {
+            $field_key = "field_ncma_analytics_data";
+            $value = $request_body['average_duration'];
+            update_field( $field_key, $value, $post_id );
+        }
         
 
     } else {
